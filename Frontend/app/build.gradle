@@ -36,7 +36,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-maps:18.0.2' // Use the latest version
     implementation 'org.osmdroid:osmdroid-android:6.1.20'  // Adjust to a stable version
     implementation 'org.osmdroid:osmdroid-wms:6.1.20'
-    implementation 'com.github.hannesa2:panoramagl:1.11'
+    implementation 'com.google.vr:sdk-panowidget:1.80.0'
     implementation 'org.java-websocket:Java-WebSocket:1.5.1'
     //For Jacob to create javadocs. Uncomment to do so.
     //implementation fileTree(dir: '/Users/jacobg/Library/Android/sdk/platforms/android-34', include: ['*.aar', '*.jar'], exclude: [])

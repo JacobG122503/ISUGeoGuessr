@@ -1,0 +1,23 @@
+//Command shift b
+
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Android App",
+            "type": "shell",
+            "command": "./gradlew installDebug && adb shell am start -n com.example.androidexample/.MainActivity",
+            "windows": {
+                "command": "gradlew installDebug && adb shell am start -n com.example.androidexample/.MainActivity"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        }
+    ]
+}

@@ -82,6 +82,11 @@ public class LoginActivity extends AppCompatActivity {
      */
     private void login(String usernameInput, String passwordInput) {
         //skip login for testing
+        Intent intent = new Intent(LoginActivity.this, UserHome.class);
+        intent.putExtra("USERNAME", "TestAdmin");
+        intent.putExtra("ID", "1");
+        startActivity(intent);
+        if (true) return;
 
         String URL_GET_USERS = "http://coms-3090-070.class.las.iastate.edu:8080/users";
 
@@ -146,10 +151,8 @@ public class LoginActivity extends AppCompatActivity {
                 return headers;
             }
         };
-
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         requestQueue.add(jsonArrayRequest);
-
     }
 
 }

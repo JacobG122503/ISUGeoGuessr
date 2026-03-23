@@ -8,11 +8,10 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
-import com.panoramagl.PLManager;
-import com.panoramagl.utils.PLUtils;
-import com.panoramagl.PLSphericalPanorama;
-import com.panoramagl.PLImage;
+import com.google.vr.sdk.widgets.pano.VrPanoramaView;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
@@ -21,16 +20,13 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Overlay;
 import android.view.View;
 
-
-
 /**
  * PlayActivity that handles the game logic, including displaying panoramic images,
  * interacting with a map to select locations, and calculating scores.
  */
 public class PlayActivity extends AppCompatActivity {
 
-    private PLManager plManager;
-    private PLSphericalPanorama panorama;
+    private VrPanoramaView panoramaView;
     private MapView mapView;
     private Button submitLocationButton;
     private Marker currentMarker;
@@ -62,19 +58,7 @@ public class PlayActivity extends AppCompatActivity {
         setContentView(R.layout.activity_play);
         int playCount = getIntent().getIntExtra("PLAY_COUNT", 1); // Default to 1 if not passed
 
-        // Initialize PanoramaGL Manager and link to the PLView in XML
-        plManager = new PLManager(this);
-        plManager.setContentView(findViewById(R.id.locationPhoto));
-        plManager.onCreate();
-
-        findViewById(R.id.locationPhoto).setOnTouchListener((v, event) -> plManager.onTouchEvent(event));
-
-        // Set up the spherical panorama
-        panorama = new PLSphericalPanorama();
-        panorama.getCamera().lookAt(30.0f, 90.0f);
-        panorama.getCamera().setYMin(0.5f);
-        panorama.getCamera().setYMax(2.0f);
-        plManager.setPanorama(panorama);
+        panoramaView = findViewById(R.id.locationPhoto);
 
         // Initialize other UI elements
         mapView = findViewById(R.id.mapView);
@@ -308,7 +292,14 @@ public class PlayActivity extends AppCompatActivity {
      * @param imageResourceId the resource ID of the image to be displayed.
      */
     private void updatePanoramaImage(int imageResourceId) {
-        panorama.setImage(new PLImage(PLUtils.getBitmap(this, imageResourceId), false));
+        new Thread(() -> {
+            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), imageResourceId);
+            runOnUiThread(() -> {
+                VrPanoramaView.Options options = new VrPanoramaView.Options();
+                options.inputType = VrPanoramaView.Options.TYPE_MONO;
+                panoramaView.loadImageFromBitmap(bitmap, options);
+            });
+        }).start();
     }
 
     /**
@@ -333,20 +324,20 @@ public class PlayActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        plManager.onResume();
+        panoramaView.resumeRendering();
         mapView.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        plManager.onPause();
+        panoramaView.pauseRendering();
         mapView.onPause();
     }
 
     @Override
     protected void onDestroy() {
+        panoramaView.shutdown();
         super.onDestroy();
-        plManager.onDestroy();
     }
 }
