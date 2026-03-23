@@ -1,3 +1,5 @@
+// ./run_in_vscode.sh     
+
 package com.example.androidexample;
 
 import android.content.Intent;
@@ -8,11 +10,10 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
-import com.panoramagl.PLManager;
-import com.panoramagl.utils.PLUtils;
-import com.panoramagl.PLSphericalPanorama;
-import com.panoramagl.PLImage;
+import com.google.vr.sdk.widgets.pano.VrPanoramaView;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
@@ -21,16 +22,13 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Overlay;
 import android.view.View;
 
-
-
 /**
  * PlayActivity that handles the game logic, including displaying panoramic images,
  * interacting with a map to select locations, and calculating scores.
  */
 public class PlayActivity extends AppCompatActivity {
 
-    private PLManager plManager;
-    private PLSphericalPanorama panorama;
+    private VrPanoramaView panoramaView;
     private MapView mapView;
     private Button submitLocationButton;
     private Marker currentMarker;
@@ -42,7 +40,6 @@ public class PlayActivity extends AppCompatActivity {
     double latitude;
     double longitude;
     private int playCount = 1;
-    String username;
 
     /**
      * Called when the activity is created.
@@ -54,27 +51,17 @@ public class PlayActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        username = getIntent().getStringExtra("USERNAME");
         playCount = getIntent().getIntExtra("PLAY_COUNT", 1); // Retrieve play count
 
         // Initialize osmdroid configuration
         Configuration.getInstance().setUserAgentValue(getPackageName());
         setContentView(R.layout.activity_play);
-        int playCount = getIntent().getIntExtra("PLAY_COUNT", 1); // Default to 1 if not passed
 
-        // Initialize PanoramaGL Manager and link to the PLView in XML
-        plManager = new PLManager(this);
-        plManager.setContentView(findViewById(R.id.locationPhoto));
-        plManager.onCreate();
-
-        findViewById(R.id.locationPhoto).setOnTouchListener((v, event) -> plManager.onTouchEvent(event));
-
-        // Set up the spherical panorama
-        panorama = new PLSphericalPanorama();
-        panorama.getCamera().lookAt(30.0f, 90.0f);
-        panorama.getCamera().setYMin(0.5f);
-        panorama.getCamera().setYMax(2.0f);
-        plManager.setPanorama(panorama);
+        panoramaView = findViewById(R.id.locationPhoto);
+        
+        // Ignore the device's physical gyroscope and unlock full up/down/left/right 
+        // looking using only touch/mouse dragging!
+        panoramaView.setPureTouchTracking(true);
 
         // Initialize other UI elements
         mapView = findViewById(R.id.mapView);
@@ -120,6 +107,11 @@ public class PlayActivity extends AppCompatActivity {
 
                 // Calculate score here
                 calculateScore(latitude, longitude, getCorrectLatitude(), getCorrectLongitude());
+
+                // Close the map and reset the toggle button
+                mapView.setVisibility(View.GONE);
+                submitLocationButton.setVisibility(View.GONE);
+                mapToggleButton.setText("Map");
 
                 // Move to the next round
                 currentRound++;
@@ -188,7 +180,6 @@ public class PlayActivity extends AppCompatActivity {
         Intent intent = new Intent(PlayActivity.this, GameOver.class);
         intent.putExtra("GAME_SCORE", gameScore);
         intent.putExtra("PLAY_COUNT", playCount + 1); // Increment play count
-        intent.putExtra("USERNAME", username);
         intent.putExtra("PERFECT_GUESSES", perfectGuesses);
         startActivity(intent);
         finish();
@@ -308,7 +299,30 @@ public class PlayActivity extends AppCompatActivity {
      * @param imageResourceId the resource ID of the image to be displayed.
      */
     private void updatePanoramaImage(int imageResourceId) {
-        panorama.setImage(new PLImage(PLUtils.getBitmap(this, imageResourceId), false));
+        new Thread(() -> {
+            BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
+            bmpOptions.inScaled = false; // Prevent Android from auto-scaling the image
+            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), imageResourceId, bmpOptions);
+            
+            // Force the bitmap to be exactly 2:1 mathematically by CROPPING instead of scaling.
+            // This guarantees 100% original pixel quality with zero blurring.
+            if (bitmap.getWidth() != bitmap.getHeight() * 2) {
+                int targetWidth = bitmap.getHeight() * 2;
+                if (bitmap.getWidth() > targetWidth) {
+                    bitmap = Bitmap.createBitmap(bitmap, 0, 0, targetWidth, bitmap.getHeight());
+                } else {
+                    int targetHeight = bitmap.getWidth() / 2;
+                    bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), targetHeight);
+                }
+            }
+            
+            final Bitmap finalBitmap = bitmap;
+            runOnUiThread(() -> {
+                VrPanoramaView.Options options = new VrPanoramaView.Options();
+                options.inputType = VrPanoramaView.Options.TYPE_MONO;
+                panoramaView.loadImageFromBitmap(finalBitmap, options);
+            });
+        }).start();
     }
 
     /**
@@ -333,20 +347,20 @@ public class PlayActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        plManager.onResume();
+        panoramaView.resumeRendering();
         mapView.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        plManager.onPause();
+        panoramaView.pauseRendering();
         mapView.onPause();
     }
 
     @Override
     protected void onDestroy() {
+        panoramaView.shutdown();
         super.onDestroy();
-        plManager.onDestroy();
     }
 }
