@@ -60,6 +60,10 @@ public class PlayActivity extends AppCompatActivity {
         setContentView(R.layout.activity_play);
 
         panoramaView = findViewById(R.id.locationPhoto);
+        
+        // Ignore the device's physical gyroscope and unlock full up/down/left/right 
+        // looking using only touch/mouse dragging!
+        panoramaView.setPureTouchTracking(true);
 
         // Initialize other UI elements
         mapView = findViewById(R.id.mapView);
@@ -299,11 +303,27 @@ public class PlayActivity extends AppCompatActivity {
      */
     private void updatePanoramaImage(int imageResourceId) {
         new Thread(() -> {
-            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), imageResourceId);
+            BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
+            bmpOptions.inScaled = false; // Prevent Android from auto-scaling the image
+            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), imageResourceId, bmpOptions);
+            
+            // Force the bitmap to be exactly 2:1 mathematically by CROPPING instead of scaling.
+            // This guarantees 100% original pixel quality with zero blurring.
+            if (bitmap.getWidth() != bitmap.getHeight() * 2) {
+                int targetWidth = bitmap.getHeight() * 2;
+                if (bitmap.getWidth() > targetWidth) {
+                    bitmap = Bitmap.createBitmap(bitmap, 0, 0, targetWidth, bitmap.getHeight());
+                } else {
+                    int targetHeight = bitmap.getWidth() / 2;
+                    bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), targetHeight);
+                }
+            }
+            
+            final Bitmap finalBitmap = bitmap;
             runOnUiThread(() -> {
                 VrPanoramaView.Options options = new VrPanoramaView.Options();
                 options.inputType = VrPanoramaView.Options.TYPE_MONO;
-                panoramaView.loadImageFromBitmap(bitmap, options);
+                panoramaView.loadImageFromBitmap(finalBitmap, options);
             });
         }).start();
     }
