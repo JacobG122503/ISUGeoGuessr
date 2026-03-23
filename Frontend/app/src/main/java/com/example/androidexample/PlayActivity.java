@@ -106,6 +106,11 @@ public class PlayActivity extends AppCompatActivity {
                 // Calculate score here
                 calculateScore(latitude, longitude, getCorrectLatitude(), getCorrectLongitude());
 
+                // Close the map and reset the toggle button
+                mapView.setVisibility(View.GONE);
+                submitLocationButton.setVisibility(View.GONE);
+                mapToggleButton.setText("Map");
+
                 // Move to the next round
                 currentRound++;
                 startRound();
