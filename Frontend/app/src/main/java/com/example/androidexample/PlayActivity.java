@@ -40,7 +40,6 @@ public class PlayActivity extends AppCompatActivity {
     double latitude;
     double longitude;
     private int playCount = 1;
-    String username;
 
     /**
      * Called when the activity is created.
@@ -52,7 +51,6 @@ public class PlayActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        username = getIntent().getStringExtra("USERNAME");
         playCount = getIntent().getIntExtra("PLAY_COUNT", 1); // Retrieve play count
 
         // Initialize osmdroid configuration
@@ -182,7 +180,6 @@ public class PlayActivity extends AppCompatActivity {
         Intent intent = new Intent(PlayActivity.this, GameOver.class);
         intent.putExtra("GAME_SCORE", gameScore);
         intent.putExtra("PLAY_COUNT", playCount + 1); // Increment play count
-        intent.putExtra("USERNAME", username);
         intent.putExtra("PERFECT_GUESSES", perfectGuesses);
         startActivity(intent);
         finish();

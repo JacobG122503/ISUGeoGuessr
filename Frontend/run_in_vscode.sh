@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#   ./run_in_vscode.sh 
+
 clear
 # Resolve Android SDK path for macOS
 ANDROID_SDK=$HOME/Library/Android/sdk
@@ -34,4 +36,4 @@ $ANDROID_SDK/platform-tools/adb uninstall com.example.androidexample || true
 
 echo "Building and launching the new app..."
 # 4. Run the Gradle build and start the app
-./gradlew installDebug && $ANDROID_SDK/platform-tools/adb shell am start -n com.example.androidexample/.LoginActivity
+./gradlew installDebug && $ANDROID_SDK/platform-tools/adb shell am start -n com.example.androidexample/.MainActivity
