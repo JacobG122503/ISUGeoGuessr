@@ -3,7 +3,7 @@
     android:layout_height="match_parent">
 
     <!-- PLView for the panoramic image -->
-    <FrameLayout
+    <com.google.vr.sdk.widgets.pano.VrPanoramaView
         android:id="@+id/locationPhoto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

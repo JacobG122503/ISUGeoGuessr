@@ -69,7 +69,6 @@ public class UserHome extends AppCompatActivity implements WebSocketListener {
                 intent.putExtra("PLAY_COUNT", playCount); // Pass play count
                 intent.putExtra("USERNAME", username);
                 startActivity(intent);
-                finish();
             }
         });
 

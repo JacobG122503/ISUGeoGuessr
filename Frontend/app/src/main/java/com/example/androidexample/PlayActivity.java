@@ -1,3 +1,5 @@
+// ./run_in_vscode.sh     
+
 package com.example.androidexample;
 
 import android.content.Intent;
