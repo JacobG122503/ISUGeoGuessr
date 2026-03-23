@@ -81,7 +81,8 @@ public class LoginActivity extends AppCompatActivity {
      * @param passwordInput
      */
     private void login(String usernameInput, String passwordInput) {
-        //skip login for testing
+        // RE-ADDED BYPASS: Skip network request so you can test the game
+        // without needing to connect to the Iowa State VPN!
         Intent intent = new Intent(LoginActivity.this, UserHome.class);
         intent.putExtra("USERNAME", "TestAdmin");
         intent.putExtra("ID", "1");
@@ -142,6 +143,8 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.e("Volley Error", error.toString());
+                        // Added a Toast so the screen doesn't just silently freeze on an error!
+                        Toast.makeText(getApplicationContext(), "Network Error: " + error.toString(), Toast.LENGTH_LONG).show();
                     }
                 }) {
             @Override

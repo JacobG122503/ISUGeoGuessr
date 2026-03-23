@@ -58,7 +58,6 @@ public class PlayActivity extends AppCompatActivity {
         // Initialize osmdroid configuration
         Configuration.getInstance().setUserAgentValue(getPackageName());
         setContentView(R.layout.activity_play);
-        int playCount = getIntent().getIntExtra("PLAY_COUNT", 1); // Default to 1 if not passed
 
         panoramaView = findViewById(R.id.locationPhoto);
 

@@ -12,19 +12,26 @@ if [ -z "$AVD_NAME" ]; then
     exit 1
 fi
 
-echo "Starting emulator: $AVD_NAME..."
-# 2. Start emulator in the background, but print errors if it fails to launch
-$ANDROID_SDK/emulator/emulator -avd "$AVD_NAME" > /dev/null &
+if $ANDROID_SDK/platform-tools/adb devices | grep -E -q "emulator-[0-9]+[[:space:]]+device"; then
+    echo "Emulator is already running. Skipping boot sequence..."
+else
+    echo "Starting emulator: $AVD_NAME..."
+    # 2. Start emulator in the background, but print errors if it fails to launch
+    $ANDROID_SDK/emulator/emulator -avd "$AVD_NAME" -dns-server 8.8.8.8 > /dev/null &
 
-echo "Waiting for emulator to fully boot (this may take a minute)..."
-# 3. Wait for the device to connect
-$ANDROID_SDK/platform-tools/adb wait-for-device
+    echo "Waiting for emulator to fully boot (this may take a minute)..."
+    # 3. Wait for the device to connect
+    $ANDROID_SDK/platform-tools/adb wait-for-device
 
-# Wait for the Android OS to finish booting
-while [ "$($ANDROID_SDK/platform-tools/adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
-    sleep 2
-done
+    # Wait for the Android OS to finish booting
+    while [ "$($ANDROID_SDK/platform-tools/adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
+        sleep 2
+    done
+fi
 
-echo "Emulator is ready! Building and launching the app..."
+echo "Emulator is ready! Uninstalling old app to free up space..."
+$ANDROID_SDK/platform-tools/adb uninstall com.example.androidexample || true
+
+echo "Building and launching the new app..."
 # 4. Run the Gradle build and start the app
-./gradlew installDebug && $ANDROID_SDK/platform-tools/adb shell am start -n com.example.androidexample/.MainActivity
+./gradlew installDebug && $ANDROID_SDK/platform-tools/adb shell am start -n com.example.androidexample/.LoginActivity
